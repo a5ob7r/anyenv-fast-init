@@ -12,7 +12,7 @@ installed.
 
 ```sh
 $ mkdir -p $(anyenv root)/plugins
-$ git clone 
+$ git clone https://github.com/a5ob7r/anyenv-fast-init.git $(anyenv root)/plugins/anyenv-update
 ```
 
 ## Usage
