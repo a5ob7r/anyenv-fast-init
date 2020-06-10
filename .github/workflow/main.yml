@@ -1,0 +1,31 @@
+name: main
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install anyenv
+        run: git clone https://github.com/anyenv/anyenv ~/.anyenv
+
+      - name: Setup PATH
+        run: export PATH="$HOME/.anyenv/bin:$PATH"
+
+      - name: Install rbenv
+        run: anyenv install rbenv
+
+      - name: Install pyenv
+        run: anyenv install pyenv
+
+      - name: Initialize anyenv with fast-init
+        run: eval "$(anyenv fast-init)"
+
+      - name: Use rbenv command
+        run: rbenv --help
+
+      - name: Use pyenv command
+        run: pyenv --help
