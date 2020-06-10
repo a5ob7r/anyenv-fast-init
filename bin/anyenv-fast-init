@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+#
+# Summary: Fast initialize anyenv using cache.
+#
+# Usage: anyenv fast-init [-h|--help] [--cache-clear]
+#
+#   -h, --help     Show this messages.
+#   --cache-clear  Force clear old cache.
+#
+
+# Set useful shell options
+set -Cueo pipefail
+
+readonly ANYENV_ENVS_PATH="${ANYENV_ROOT}/envs"
+
+readonly ANYENV_FASTINIT_CACHE_ROOT="${XDG_CACHE_HOME:-${HOME}/.cache}/anyenv/fast-init"
+readonly INIT_CACHE_PATH="${ANYENV_FASTINIT_CACHE_ROOT}/anyenv_init.sh"
+readonly EXPORT_CACHE_PATH="${ANYENV_FASTINIT_CACHE_ROOT}/anyenv_init_export.sh"
+readonly OTHER_CACHE_PATH="${ANYENV_FASTINIT_CACHE_ROOT}/anyenv_init_other.sh"
+readonly PREVIOUS_ENVS_CACHE_PATH="${ANYENV_FASTINIT_CACHE_ROOT}/anyenv_envs.txt"
+
+show_export_cache() {
+  cat "${EXPORT_CACHE_PATH}"
+}
+
+show_other_cache() {
+  cat "${OTHER_CACHE_PATH}"
+}
+
+cache_anyenv_init() {
+  anyenv init - --no-rehash  > "${INIT_CACHE_PATH}"
+}
+
+cache_export() {
+  grep -i export < "${INIT_CACHE_PATH}" > "${EXPORT_CACHE_PATH}" || true
+}
+
+cache_other() {
+  grep -iv export < "${INIT_CACHE_PATH}" > "${OTHER_CACHE_PATH}" || true
+}
+
+cache_previous_envs() {
+  echo "${ANYENV_ENVS_PATH}/"* >| "${PREVIOUS_ENVS_CACHE_PATH}"
+}
+
+is_anyenv_cached() {
+  [[ -f "${INIT_CACHE_PATH}" ]]
+}
+
+is_export_cached() {
+  [[ -f "${EXPORT_CACHE_PATH}" ]]
+}
+
+is_other_cached() {
+  [[ -f "${OTHER_CACHE_PATH}" ]]
+}
+
+is_previous_envs_cached() {
+  [[ -f "${PREVIOUS_ENVS_CACHE_PATH}" ]]
+}
+
+is_new_envs_added() {
+  ! diff "${PREVIOUS_ENVS_CACHE_PATH}" <(echo "${ANYENV_ENVS_PATH}/"*) > /dev/null 2>&1
+}
+
+is_anyenv_initialized() {
+  [[ "${PATH}" == *"${ANYENV_ENVS_PATH}/"* ]]
+}
+
+setup() {
+  mkdir -p "${ANYENV_FASTINIT_CACHE_ROOT}"
+}
+
+cleanup() {
+  rm "${ANYENV_FASTINIT_CACHE_ROOT}/"*
+}
+
+main() {
+  is_previous_envs_cached || cache_previous_envs
+  is_new_envs_added && cleanup && cache_previous_envs
+  is_anyenv_cached || cache_anyenv_init
+  is_export_cached || cache_export
+  is_other_cached || cache_other
+
+  is_anyenv_initialized || show_export_cache
+  show_other_cache
+}
+
+usage() {
+  anyenv-help fast-init
+}
+
+# flag
+cache_clear_flag=0
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case ${1} in
+    --debug )
+      set -x
+      shift
+      ;;
+    -h | --help )
+      usage
+      exit 0
+      ;;
+    --cache-clear )
+      cache_clear_flag=1
+      shift
+      ;;
+    -* )
+      echo -e "Invalid option: '${1}'\n" >&2
+      usage
+      exit 1
+      ;;
+    * )
+      shift
+      ;;
+  esac
+done
+
+setup
+(( "${cache_clear_flag}" )) && cleanup
+main
