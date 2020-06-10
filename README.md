@@ -1,4 +1,4 @@
-# anyenv-fastinit
+# anyenv-fast-init
 
 This is an anyenv plugin that privides alternative init command of anyenv,
 which is faster than original.
