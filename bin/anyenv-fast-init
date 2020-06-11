@@ -95,7 +95,7 @@ main() {
   is_export_cached || cache_export
   is_other_cached || cache_other
 
-  is_export_needed || show_export_cache
+  is_export_needed && show_export_cache
   show_other_cache
 
   is_new_envs_added && cache_previous_envs
