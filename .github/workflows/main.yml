@@ -10,10 +10,12 @@ jobs:
       - name: Install anyenv
         run: git clone https://github.com/anyenv/anyenv ~/.anyenv
 
-      - name: Install anyenv-fast-init
-        uses: actions/checkout@v2
-        with:
-          path: .anyenv/plugins/anyenv-fast-init
+      - uses: actions/checkout@v2
+
+      - name: Install anyenv-fast-init using symbolic link
+        run: |
+          mkdir -p ~/.anyenv/plugins
+          ln -s "${PWD}" ~/.anyenv/plugins
 
       - name: Install anyenv manifest
         run: env PATH="${HOME}/.anyenv/bin:${PATH}" anyenv install --force-init
@@ -31,6 +33,3 @@ jobs:
       - name: Reinitialize anyenv when new envs added
         run: |
           export PATH="${HOME}/.anyenv/bin:${PATH}" && eval "$(anyenv fast-init)" && rbenv --help && anyenv install nodenv && eval "$(anyenv fast-init)" && nodenv --help
-
-      - name: Test using test script
-        run: bash -x test.sh
