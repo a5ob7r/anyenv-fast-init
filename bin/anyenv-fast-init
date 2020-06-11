@@ -63,6 +63,10 @@ is_new_envs_added() {
   ! diff "${PREVIOUS_ENVS_CACHE_PATH}" <(echo "${ANYENV_ENVS_PATH}/"*) > /dev/null 2>&1
 }
 
+is_export_needed() {
+  is_new_envs_added || ! is_anyenv_initialized
+}
+
 is_anyenv_initialized() {
   [[ "${PATH}" == *"${ANYENV_ENVS_PATH}/"* ]]
 }
@@ -71,19 +75,30 @@ setup() {
   mkdir -p "${ANYENV_FASTINIT_CACHE_ROOT}"
 }
 
+cleanup_sh_cache() {
+  rm \
+    "${INIT_CACHE_PATH}" \
+    "${EXPORT_CACHE_PATH}" \
+    "${OTHER_CACHE_PATH}"
+}
+
 cleanup() {
   rm "${ANYENV_FASTINIT_CACHE_ROOT}/"*
 }
 
 main() {
   is_previous_envs_cached || cache_previous_envs
-  is_new_envs_added && cleanup && cache_previous_envs
+
+  is_new_envs_added && cleanup_sh_cache
+
   is_anyenv_cached || cache_anyenv_init
   is_export_cached || cache_export
   is_other_cached || cache_other
 
-  is_anyenv_initialized || show_export_cache
+  is_export_needed && show_export_cache
   show_other_cache
+
+  is_new_envs_added && cache_previous_envs
 }
 
 usage() {
