@@ -27,3 +27,7 @@ jobs:
         run: |
           export PATH="${HOME}/.anyenv/bin:${PATH}" && eval "$(anyenv fast-init)" && rbenv --help
           export PATH="${HOME}/.anyenv/bin:${PATH}" && eval "$(anyenv fast-init)" && pyenv --help
+
+      - name: Reinitialize anyenv when new envs added
+        run: |
+          export PATH="${HOME}/.anyenv/bin:${PATH}" && eval "$(anyenv fast-init)" && rbenv --help && anyenv install nodenv && eval "$(anyenv fast-init)" && nodenv --help
