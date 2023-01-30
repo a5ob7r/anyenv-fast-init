@@ -15,28 +15,14 @@ readonly ANYENV_ENVS_PATH="${ANYENV_ROOT}/envs"
 
 readonly ANYENV_FASTINIT_CACHE_ROOT="${XDG_CACHE_HOME:-${HOME}/.cache}/anyenv/fast-init"
 readonly INIT_CACHE_PATH="${ANYENV_FASTINIT_CACHE_ROOT}/anyenv_init.sh"
-readonly EXPORT_CACHE_PATH="${ANYENV_FASTINIT_CACHE_ROOT}/anyenv_init_export.sh"
-readonly OTHER_CACHE_PATH="${ANYENV_FASTINIT_CACHE_ROOT}/anyenv_init_other.sh"
 readonly PREVIOUS_ENVS_CACHE_PATH="${ANYENV_FASTINIT_CACHE_ROOT}/anyenv_envs.txt"
 
-show_export_cache() {
-  cat "${EXPORT_CACHE_PATH}"
-}
-
-show_other_cache() {
-  cat "${OTHER_CACHE_PATH}"
+show_init_cache() {
+  cat "${INIT_CACHE_PATH}"
 }
 
 cache_anyenv_init() {
   anyenv init - --no-rehash  > "${INIT_CACHE_PATH}"
-}
-
-cache_export() {
-  grep -i export < "${INIT_CACHE_PATH}" > "${EXPORT_CACHE_PATH}" || true
-}
-
-cache_other() {
-  grep -iv export < "${INIT_CACHE_PATH}" > "${OTHER_CACHE_PATH}" || true
 }
 
 cache_previous_envs() {
@@ -47,14 +33,6 @@ is_anyenv_cached() {
   [[ -f "${INIT_CACHE_PATH}" ]]
 }
 
-is_export_cached() {
-  [[ -f "${EXPORT_CACHE_PATH}" ]]
-}
-
-is_other_cached() {
-  [[ -f "${OTHER_CACHE_PATH}" ]]
-}
-
 is_previous_envs_cached() {
   [[ -f "${PREVIOUS_ENVS_CACHE_PATH}" ]]
 }
@@ -63,7 +41,7 @@ is_new_envs_added() {
   ! diff "${PREVIOUS_ENVS_CACHE_PATH}" <(echo "${ANYENV_ENVS_PATH}/"*) > /dev/null 2>&1
 }
 
-is_export_needed() {
+is_init_needed() {
   is_new_envs_added || ! is_anyenv_initialized
 }
 
@@ -77,9 +55,7 @@ setup() {
 
 cleanup_sh_cache() {
   rm \
-    "${INIT_CACHE_PATH}" \
-    "${EXPORT_CACHE_PATH}" \
-    "${OTHER_CACHE_PATH}"
+    "${INIT_CACHE_PATH}"
 }
 
 cleanup() {
@@ -92,13 +68,12 @@ main() {
   is_new_envs_added && cleanup_sh_cache
 
   is_anyenv_cached || cache_anyenv_init
-  is_export_cached || cache_export
-  is_other_cached || cache_other
 
-  is_export_needed && show_export_cache
-  show_other_cache
+  is_init_needed && show_init_cache
 
   is_new_envs_added && cache_previous_envs
+
+  return 0
 }
 
 usage() {
